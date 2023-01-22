@@ -1,0 +1,135 @@
+version: "3.7"
+services:
+
+  app:
+    build:
+      args:
+        user: sammy
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: equip
+    container_name: equip_app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www           #может быть примонтировал неправильную директорию
+    networks:
+      - equip_net
+  
+  equip_db_writer:
+    image: mysql:8.0
+    container_name: equip_db_writer
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${WRITER_DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${WRITER_DB_PASSWORD}
+      MYSQL_PASSWORD: ${WRITER_DB_PASSWORD}
+      MYSQL_USER: ${WRITER_DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql_writer
+      # MYSQL_TCP_PORT: 3306
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - '33060:3306'
+    volumes:
+      - dbdata_write:/var/lib/mysql/
+      - ./docker-compose/mysql/db_writer.cnf:/etc/mysql/my.cnf
+    networks:
+      - equip_net
+
+  equip_db_reader:
+    image: mysql:8.0
+    container_name: equip_db_reader
+    restart: unless-stopped
+    # tty: true
+    environment:
+      MYSQL_DATABASE: ${READER_DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${READER_DB_PASSWORD}
+      MYSQL_PASSWORD: ${READER_DB_PASSWORD}
+      MYSQL_USER: ${READER_DB_USERNAME}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql_reader
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - '43060:3306'
+    volumes:
+      - dbdata_read:/var/lib/mysql/
+      - ./docker-compose/mysql/db_reader.cnf:/etc/mysql/my.cnf
+
+    networks:
+      - equip_net
+
+
+  nginx:
+    image: nginx:1.17-alpine
+    container_name: equip_nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www                   #может быть примонтировал неправильную директорию
+      - ./docker-compose/nginx:/etc/nginx/conf.d
+    networks:
+      - equip_net
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    volumes:
+      - ./docker-compose/prometheus:/etc/prometheus
+      - prom_data:/prometheus
+    networks:
+      - equip_net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+    volumes:
+      - ./docker-compose/grafana:/etc/grafana/provisioning/datasources
+    networks:
+      - equip_net
+
+  nodeexporter:
+    image: prom/node-exporter:latest
+    container_name: nodeexporter
+    user: root
+    privileged: true
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    ports:
+      - 9100:9100
+    networks:
+      - equip_net
+
+
+networks:
+  equip_net:
+    driver: bridge
+
+volumes:
+  dbdata_write:
+    driver: local
+  dbdata_read:
+    driver: local
+  prom_data:
+
+
