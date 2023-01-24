@@ -1,20 +1,25 @@
 #!/bin/bash
 export $(xargs < .env)
-echo $WRITER_DB_HOST
-docker exec $READER_DB_HOST sh -c 'export MYSQL_PWD=$MYSQL_PASSWORD; mysql -u root -e "show databases;"'
 
-until docker exec $WRITER_DB_HOST sh -c 'export MYSQL_PWD=$MYSQL_PASSWORD; mysql -u root -e "show databases;"'
+echo "GENERATE KEY FOR APP"
+docker exec $APP_NAME php artisan key:generate
+echo "WAIT TO CONNECT..."
+sleep 15
+
+docker exec $READER_DB_HOST sh -c 'export MYSQL_PWD=$MYSQL_PASSWORD; mysql -u root -e ";"'
+
+until docker exec $WRITER_DB_HOST sh -c 'export MYSQL_PWD=$MYSQL_PASSWORD; mysql -u root -e ";"'
 do
     echo "Waiting for mysql_master database connection..."
     sleep 4
 done
 
-priv_stmt='show databases; CREATE USER "'$READER_DB_USERNAME'"@"%" IDENTIFIED BY "'$READER_DB_PASSWORD'"; GRANT REPLICATION SLAVE ON *.* TO "'$READER_DB_USERNAME'"@"%"; FLUSH PRIVILEGES;'
+priv_stmt='CREATE USER "'$READER_DB_USERNAME'"@"%" IDENTIFIED BY "'$READER_DB_PASSWORD'"; GRANT REPLICATION SLAVE ON *.* TO "'$READER_DB_USERNAME'"@"%"; FLUSH PRIVILEGES;'
 one='export MYSQL_PWD=$MYSQL_PASSWORD; '
 two=$one"mysql -u root -e '$priv_stmt'"
 docker exec $WRITER_DB_HOST sh -c "$two"
 
-until docker exec $READER_DB_HOST sh -c 'export MYSQL_PWD=$MYSQL_PASSWORD; mysql -u root -e "show databases;"'
+until docker exec $READER_DB_HOST sh -c 'export MYSQL_PWD=$MYSQL_PASSWORD; mysql -u root -e ";"'
 do
     echo "Waiting for mysql_slave database connection..."
     sleep 4
@@ -34,3 +39,8 @@ six=$five"mysql -u root -e '$three'"
 docker exec $READER_DB_HOST sh -c "$six"
 
 docker exec $READER_DB_HOST sh -c 'export MYSQL_PWD=$MYSQL_PASSWORD; mysql -u root -e "SHOW SLAVE STATUS \G"'
+
+echo "WAIT TO MIGRATE..."
+sleep 15
+
+docker exec $APP_NAME php artisan migrate:fresh --seed
