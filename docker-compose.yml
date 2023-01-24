@@ -4,12 +4,12 @@ services:
   app:
     build:
       args:
-        user: sammy
+        user: laravel
         uid: 1000
       context: ./
       dockerfile: Dockerfile
     image: equip
-    container_name: equip_app
+    container_name: ${APP_NAME}
     restart: unless-stopped
     working_dir: /var/www/
     volumes:
