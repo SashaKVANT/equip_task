@@ -139,6 +139,22 @@ $ docker volume prune
 The commands above __MUST BE EXECUTED__ if you want to restart the application 
 
 ---
+__Full list of commands for start__:
+- change __.env__
+- change __.cnf__
+
+```
+$ docker-compose build
+$ docker-compose up -d
+$ sh test-script.sh
+```
+__For restart__: 
+```
+$ docker-compose down
+$ docker volume prune
+```
+
+---
 _Monitoring with Grafana - Prometheus - Node_expoter_
 
 In ```docker-compose.yml``` additionally defined three containers:
