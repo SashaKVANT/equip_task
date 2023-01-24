@@ -137,3 +137,38 @@ $ docker-compose down
 $ docker volume prune
 ```
 The commands above __MUST BE EXECUTED__ if you want to restart the application 
+
+---
+_Monitoring with Grafana - Prometheus - Node_expoter_
+
+In ```docker-compose.yml``` additionally defined three containers:
+- grafana - to display and create dashboards
+- prometheus - for storing and managing metrics
+- nodeexporter - metrics generator for node
+  
+When your containers are up, go to [localhost:8000](locahost:9090)
+
+You will be taken to the start page of __prometheus__
+By clicking on the search icon to the right of the search bar, you can display the metrics that are generated for __prometheus__ by __nodeexporter__
+
+If you want to create a dashboard for visualize by Grafana, copy code of metrics, for example : ```promhttp_metric_handler_requests_total{code="200", instance="localhost:9090", job="prometheus"}```
+
+If you want to see in dashboard __total_http_requests_500__:
+- go to [localhost:3000](locahost:3000)
+- login in Grafana
+- Dashboards&rarr;Import&rarr;Upload JSON file
+- Insert or upload __dashboard.json__ located at 
+ ```./docker-compose/grafana/dashboards```
+
+---
+
+Configuration files and dashboards
+
+- __nginx.conf__ located at ```./docker-compose/nginx/nginx.conf```
+- __db_writer.cnf__ and __db_reader.cnf__ located at 
+ ```./docker-compose/mysql/```
+- __prometheus.yml__ located at ```./docker-compose/prometheus/```
+- __dashboard.json__ located at 
+ ```./docker-compose/grafana/dashboards```
+- __datasource.yml__ located at
+ ```./docker-compose/grafana/datasources```

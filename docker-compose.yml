@@ -100,7 +100,8 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=grafana
     volumes:
-      - ./docker-compose/grafana:/etc/grafana/provisioning/datasources
+      - ./docker-compose/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./docker-compose/grafana/dashboards:/etc/grafana/provisioning/dashboards
       - grafana-data:/var/lib/grafana
     networks:
       - equip_net
