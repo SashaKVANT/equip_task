@@ -1,4 +1,4 @@
-version: "3.7"
+version: "2"
 services:
 
   app:
@@ -13,13 +13,15 @@ services:
     restart: unless-stopped
     working_dir: /var/www/
     volumes:
-      - ./:/var/www           #может быть примонтировал неправильную директорию
+      - ./:/var/www     
     networks:
       - equip_net
   
   equip_db_writer:
     image: mysql:8.0
-    container_name: equip_db_writer
+    env_file:
+      - .env
+    container_name: ${WRITER_DB_HOST}
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${WRITER_DB_DATABASE}
@@ -28,20 +30,28 @@ services:
       MYSQL_USER: ${WRITER_DB_USERNAME}
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql_writer
-      # MYSQL_TCP_PORT: 3306
+      MYSQL_TCP_PORT: 3306
     ports:
       # <Port exposed> : < MySQL Port running inside container>
       - '33060:3306'
     volumes:
-      - dbdata_write:/var/lib/mysql/
       - ./docker-compose/mysql/db_writer.cnf:/etc/mysql/my.cnf
+      # - ./master/data:/var/lib/mysql
+      - dbdata_write:/var/lib/mysql/
+      # - ./docker-compose/mysql/db_writer.cnf:/etc/mysql/my.cnf
+      # - ./scripts/build.sh:/tmp/mysql_connector.sh
     networks:
       - equip_net
+    # command: mysqld & bash /tmp/mysql_connector.sh
+    
 
   equip_db_reader:
     image: mysql:8.0
-    container_name: equip_db_reader
+    env_file:
+      - .env
+    container_name: ${READER_DB_HOST}
     restart: unless-stopped
+    # command: tail -f /dev/null
     # tty: true
     environment:
       MYSQL_DATABASE: ${READER_DB_DATABASE}
@@ -53,10 +63,13 @@ services:
     ports:
       # <Port exposed> : < MySQL Port running inside container>
       - '43060:3306'
+    depends_on:
+      - equip_db_writer
     volumes:
-      - dbdata_read:/var/lib/mysql/
       - ./docker-compose/mysql/db_reader.cnf:/etc/mysql/my.cnf
-
+      # - ./slave/data:/var/lib/mysql
+      - dbdata_read:/var/lib/mysql/
+      # - ./docker-compose/mysql/db_reader.cnf:/etc/mysql/my.cnf
     networks:
       - equip_net
 
@@ -98,6 +111,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=grafana
     volumes:
       - ./docker-compose/grafana:/etc/grafana/provisioning/datasources
+      - grafana-data:/var/lib/grafana
     networks:
       - equip_net
 
@@ -131,5 +145,6 @@ volumes:
   dbdata_read:
     driver: local
   prom_data:
+  grafana-data:
 
 
