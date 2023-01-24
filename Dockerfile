@@ -1,4 +1,3 @@
-#Проверь версию!
 FROM php:8.1.0-fpm 
 
 # Arguments defined in docker-compose.yml
@@ -22,13 +21,12 @@ RUN apt-get update && apt-get install -y \
     npm \
     && rm -rf /var/lib/apt/lists/*
 
-# RUN chown -R $user:$user /home/$user/.composer
 
 RUN npm install npm@latest -g && \  
     npm install n -g && \
     n latest
 
-# Clear cache # дописать кэш 
+# Clear cache 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
@@ -42,11 +40,9 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user && \
     chown -R $user:$user /home/$user/.composer
-    # chown -R $user:$user /var/www/vendor/composer/
+
 # Set working directory
 WORKDIR /var/www
-
-# RUN chown -R $user:$user /var/www/vendor/composer/
 
 USER $user
 

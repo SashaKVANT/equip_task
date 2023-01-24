@@ -32,17 +32,12 @@ services:
       SERVICE_NAME: mysql_writer
       MYSQL_TCP_PORT: 3306
     ports:
-      # <Port exposed> : < MySQL Port running inside container>
       - '33060:3306'
     volumes:
       - ./docker-compose/mysql/db_writer.cnf:/etc/mysql/my.cnf
-      # - ./master/data:/var/lib/mysql
       - dbdata_write:/var/lib/mysql/
-      # - ./docker-compose/mysql/db_writer.cnf:/etc/mysql/my.cnf
-      # - ./scripts/build.sh:/tmp/mysql_connector.sh
     networks:
       - equip_net
-    # command: mysqld & bash /tmp/mysql_connector.sh
     
 
   equip_db_reader:
@@ -51,8 +46,6 @@ services:
       - .env
     container_name: ${READER_DB_HOST}
     restart: unless-stopped
-    # command: tail -f /dev/null
-    # tty: true
     environment:
       MYSQL_DATABASE: ${READER_DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${READER_DB_PASSWORD}
@@ -61,15 +54,12 @@ services:
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql_reader
     ports:
-      # <Port exposed> : < MySQL Port running inside container>
       - '43060:3306'
     depends_on:
       - equip_db_writer
     volumes:
       - ./docker-compose/mysql/db_reader.cnf:/etc/mysql/my.cnf
-      # - ./slave/data:/var/lib/mysql
       - dbdata_read:/var/lib/mysql/
-      # - ./docker-compose/mysql/db_reader.cnf:/etc/mysql/my.cnf
     networks:
       - equip_net
 
@@ -81,7 +71,7 @@ services:
     ports:
       - 8000:80
     volumes:
-      - ./:/var/www                   #может быть примонтировал неправильную директорию
+      - ./:/var/www                   
       - ./docker-compose/nginx:/etc/nginx/conf.d
     networks:
       - equip_net
