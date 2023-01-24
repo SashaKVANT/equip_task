@@ -146,7 +146,7 @@ In ```docker-compose.yml``` additionally defined three containers:
 - prometheus - for storing and managing metrics
 - nodeexporter - metrics generator for node
   
-When your containers are up, go to [localhost:8000](locahost:9090)
+When your containers are up, go to [localhost:9090](locahost:9090)
 
 You will be taken to the start page of __prometheus__
 By clicking on the search icon to the right of the search bar, you can display the metrics that are generated for __prometheus__ by __nodeexporter__
